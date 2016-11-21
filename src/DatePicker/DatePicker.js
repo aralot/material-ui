@@ -1,6 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import {dateTimeFormat, formatIso, isEqualDate} from './dateUtils';
 import DatePickerDialog from './DatePickerDialog';
+import DateRangeIcon from 'material-ui/svg-icons/action/date-range';
+import IconButton from 'material-ui/IconButton';
 import TextField from '../TextField';
 
 class DatePicker extends Component {
@@ -150,6 +152,7 @@ class DatePicker extends Component {
 
   state = {
     date: undefined,
+    textDate: ''
   };
 
   componentWillMount() {
@@ -204,6 +207,7 @@ class DatePicker extends Component {
     if (!this.isControlled()) {
       this.setState({
         date: date,
+        textDate: this.formatDate(date),
       });
     }
     if (this.props.onChange) {
@@ -212,9 +216,21 @@ class DatePicker extends Component {
   };
 
   handleFocus = (event) => {
-    event.target.blur();
     if (this.props.onFocus) {
       this.props.onFocus(event);
+    }
+  };
+
+  handleTextChange = (event, value) => {
+    this.setState({
+      textDate: value
+    });
+
+    const parsedDate = this.parseDate(value);
+    if (parsedDate) {
+      this.setState({
+        date: parsedDate
+      });
     }
   };
 
@@ -253,6 +269,19 @@ class DatePicker extends Component {
     }
   };
 
+  parseDate = (textDate) => {
+    const reg = /^\d\d\d\d-\d\d-\d\d$/;
+    if (!reg.test(textDate)) {
+      return;
+    }
+
+    const slices = textDate.split('-');
+    const year = slices[0];
+    const month = slices[1] === 0 ? 11 : (slices[1] - 1);
+    const day = slices[2];
+    return new Date(year, month, day);
+  };
+
   render() {
     const {
       DateTimeFormat,
@@ -288,11 +317,15 @@ class DatePicker extends Component {
         <TextField
           {...other}
           onFocus={this.handleFocus}
-          onTouchTap={this.handleTouchTap}
+          onChange={this.handleTextChange}
           ref="input"
           style={textFieldStyle}
-          value={this.state.date ? formatDate(this.state.date) : ''}
-        />
+          value={this.state.textDate}
+        >
+        </TextField>
+        <IconButton onTouchTap={this.handleTouchTap} touch={true}>
+          <DateRangeIcon />
+        </IconButton>
         <DatePickerDialog
           DateTimeFormat={DateTimeFormat}
           autoOk={autoOk}
