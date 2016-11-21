@@ -222,14 +222,12 @@ class DatePicker extends Component {
   };
 
   handleTextChange = (event, value) => {
-    this.setState({
-      textDate: value
-    });
-
     const parsedDate = this.parseDate(value);
     if (parsedDate) {
+      this.handleAccept(parsedDate);
+    } else {
       this.setState({
-        date: parsedDate
+        textDate: value
       });
     }
   };
