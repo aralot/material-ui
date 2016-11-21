@@ -222,12 +222,14 @@ class DatePicker extends Component {
   };
 
   handleTextChange = (event, value) => {
+    this.setState({
+      textDate: value
+    });
+
     const parsedDate = this.parseDate(value);
     if (parsedDate) {
-      this.handleAccept(parsedDate);
-    } else {
       this.setState({
-        textDate: value
+        date: parsedDate
       });
     }
   };
@@ -268,7 +270,7 @@ class DatePicker extends Component {
   };
 
   parseDate = (textDate) => {
-    const reg = /^\d\d\d\d-\d\d-\d\d$/;
+    const reg = /^\d{4}-\d{2}-\d{2}$/;
     if (!reg.test(textDate)) {
       return;
     }
