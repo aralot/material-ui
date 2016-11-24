@@ -68,6 +68,10 @@ class DatePicker extends Component {
      */
     formatDate: PropTypes.func,
     /**
+     * Tells the datepicker to handle keyboard input.
+     */
+    keyboardEnabled: PropTypes.bool,
+    /**
      * Locale used for formatting the `DatePicker` date strings. Other than for 'en-US', you
      * must provide a `DateTimeFormat` that supports the chosen `locale`.
      */
@@ -143,6 +147,7 @@ class DatePicker extends Component {
     disabled: false,
     disableYearSelection: false,
     firstDayOfWeek: 1,
+    keyboardEnabled: false,
     style: {},
   };
 
@@ -203,6 +208,11 @@ class DatePicker extends Component {
     this.openDialog();
   }
 
+  shouldHandleKeyboard() {
+    return this.props.keyboardEnabled && !this.props.disabled;
+  }
+
+
   handleAccept = (date) => {
     if (!this.isControlled()) {
       this.setState({
@@ -216,6 +226,10 @@ class DatePicker extends Component {
   };
 
   handleFocus = (event) => {
+    if (!this.shouldHandleKeyboard()) {
+      event.target.blur();
+    }
+
     if (this.props.onFocus) {
       this.props.onFocus(event);
     }
@@ -306,6 +320,7 @@ class DatePicker extends Component {
       shouldDisableDate,
       style,
       textFieldStyle,
+      keyboardEnabled,
       ...other
     } = this.props;
 
@@ -318,14 +333,17 @@ class DatePicker extends Component {
           {...other}
           onFocus={this.handleFocus}
           onChange={this.handleTextChange}
+          onTouchTap={this.shouldHandleKeyboard() ? null : this.handleTouchTap}
           ref="input"
           style={textFieldStyle}
           value={this.state.textDate}
         >
         </TextField>
-        <IconButton onTouchTap={this.handleTouchTap} touch={true}>
-          <DateRangeIcon />
-        </IconButton>
+        {this.shouldHandleKeyboard() &&
+          <IconButton onTouchTap={this.handleTouchTap} touch={true}>
+            <DateRangeIcon />
+          </IconButton>
+        }
         <DatePickerDialog
           DateTimeFormat={DateTimeFormat}
           autoOk={autoOk}
