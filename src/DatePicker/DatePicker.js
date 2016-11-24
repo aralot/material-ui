@@ -53,6 +53,10 @@ class DatePicker extends Component {
      */
     disabled: PropTypes.bool,
     /**
+     * Text for validation error.
+     */
+    errorText: PropTypes.string,
+    /**
      * Used to change the first day of week. It varies from
      * Saturday to Monday between different locales.
      * The allowed range is 0 (Sunday) to 6 (Saturday).
@@ -69,6 +73,7 @@ class DatePicker extends Component {
     formatDate: PropTypes.func,
     /**
      * Tells the datepicker to handle keyboard input.
+     * Will not work if `locale` or `shouldDisableDate` props are specified or if it is controlled component.
      */
     keyboardEnabled: PropTypes.bool,
     /**
@@ -146,6 +151,7 @@ class DatePicker extends Component {
     container: 'dialog',
     disabled: false,
     disableYearSelection: false,
+    errorText: 'Enter a valid date in "YYYY-MM-DD" format',
     firstDayOfWeek: 1,
     keyboardEnabled: false,
     style: {},
@@ -157,7 +163,8 @@ class DatePicker extends Component {
 
   state = {
     date: undefined,
-    textDate: ''
+    hasError: false,
+    textDate: '',
   };
 
   componentWillMount() {
@@ -209,7 +216,9 @@ class DatePicker extends Component {
   }
 
   shouldHandleKeyboard() {
-    return this.props.keyboardEnabled && !this.props.disabled;
+    return this.props.keyboardEnabled && !this.props.disabled &&
+      !this.props.locale && !this.props.shouldDisableDate &&
+      !this.isControlled();
   }
 
 
@@ -235,17 +244,26 @@ class DatePicker extends Component {
     }
   };
 
-  handleTextChange = (event, value) => {
-    this.setState({
-      textDate: value
-    });
+  handleBlur = () => {
+    if (this.shouldHandleKeyboard()) {
+      if (this.getDate()) {
+        this.setState({
+          textDate: this.formatDate(this.getDate())
+        });
+      }
 
-    const parsedDate = this.parseDate(value);
-    if (parsedDate) {
       this.setState({
-        date: parsedDate
+        hasError: !this.getDate() && !!this.state.textDate.trim()
       });
     }
+  }
+
+  handleTextChange = (event, value) => {
+    const parsedDate = this.parseDate(value);
+    this.setState({
+      date: parsedDate,
+      textDate: value
+    });
   };
 
   handleTouchTap = (event) => {
@@ -284,15 +302,17 @@ class DatePicker extends Component {
   };
 
   parseDate = (textDate) => {
-    const reg = /^\d{4}-\d{2}-\d{2}$/;
-    if (!reg.test(textDate)) {
+    // regex to parse date is based on ISO 8601 (YYYY-MM-DD)
+    const reg = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = reg.exec(textDate);
+    if (!match) {
       return;
     }
 
-    const slices = textDate.split('-');
-    const year = slices[0];
-    const month = slices[1] === 0 ? 11 : (slices[1] - 1);
-    const day = slices[2];
+    const year = match[1];
+    const month = match[2] === 0 ? 11 : (match[2] - 1);
+    const day = match[3];
+
     return new Date(year, month, day);
   };
 
@@ -321,6 +341,7 @@ class DatePicker extends Component {
       style,
       textFieldStyle,
       keyboardEnabled,
+      errorText,
       ...other
     } = this.props;
 
@@ -331,11 +352,13 @@ class DatePicker extends Component {
       <div className={className} style={prepareStyles(Object.assign({}, style))}>
         <TextField
           {...other}
-          onFocus={this.handleFocus}
+          onBlur={this.handleBlur}
           onChange={this.handleTextChange}
-          onTouchTap={this.shouldHandleKeyboard() ? null : this.handleTouchTap}
+          onFocus={this.handleFocus}
+          onTouchTap={!this.shouldHandleKeyboard() && this.handleTouchTap}
           ref="input"
           style={textFieldStyle}
+          errorText={this.state.hasError && errorText}
           value={this.state.textDate}
         >
         </TextField>
