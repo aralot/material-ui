@@ -5,6 +5,16 @@ import DateRangeIcon from 'material-ui/svg-icons/action/date-range';
 import IconButton from 'material-ui/IconButton';
 import TextField from '../TextField';
 
+export function getStyles(props, context) {
+  const styles = {
+    iconButtonStyle: {
+      verticalAlign: 'top',
+    },
+  };
+
+  return styles;
+}
+
 class DatePicker extends Component {
   static propTypes = {
     /**
@@ -71,6 +81,10 @@ class DatePicker extends Component {
      * @returns {any} The formatted date.
      */
     formatDate: PropTypes.func,
+    /**
+     * Override the inline-styles of calendar IconButton (it is showing when `keyboardEnabled` is `true`).
+     */
+    iconButtonStyle: PropTypes.object,
     /**
      * Tells the datepicker to handle keyboard input.
      * Will not work if `locale` or `shouldDisableDate` props are specified or if it is controlled component.
@@ -328,6 +342,7 @@ class DatePicker extends Component {
       disableYearSelection,
       firstDayOfWeek,
       formatDate: formatDateProp,
+      iconButtonStyle,
       locale,
       maxDate,
       minDate,
@@ -346,6 +361,7 @@ class DatePicker extends Component {
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
+    const styles = getStyles(this.props, this.context);
     const formatDate = formatDateProp || this.formatDate;
 
     return (
@@ -363,7 +379,11 @@ class DatePicker extends Component {
         >
         </TextField>
         {this.shouldHandleKeyboard() &&
-          <IconButton onTouchTap={this.handleTouchTap} touch={true}>
+          <IconButton
+            onTouchTap={this.handleTouchTap}
+            style={Object.assign({}, styles.iconButtonStyle, iconButtonStyle)}
+            touch={true}
+          >
             <DateRangeIcon />
           </IconButton>
         }
